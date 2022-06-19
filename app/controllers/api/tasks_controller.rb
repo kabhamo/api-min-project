@@ -1,7 +1,7 @@
 class Api::TasksController < ApplicationController
 	before_action :get_person, only: [:show, :update, :destroy, :create, :index]
 	before_action :get_task, only: [:show, :update, :destroy]
-	#TODO:status selection, type field return, active status by default
+	#TODO: type field return,create/update-fields can be nulls
 	# render status correctly,rename methods and fields(addTask,etc...)
 	def index
 		begin
@@ -22,13 +22,13 @@ class Api::TasksController < ApplicationController
 
 	def show
 		@task = Task.find(params[:id])
-	    render json: @task
+	    render json:  (format_collection @task), status: 200
     end 
 
     def create
 			if (params[:type].to_s == "Chore" || params[:type].to_s =="HomeWork")
 				if (params[:type].to_s == "Chore")
-					if (!params[:description].nil? && (params[:status].to_s == "Active" || params[:status].to_s == "Done" ||params[:status].to_s == "active" || params[:status].to_s == "done" || params[:status].nil?) && 
+					if ((params[:status].to_s == "Active" || params[:status].to_s == "Done" ||params[:status].to_s == "active" || params[:status].to_s == "done" || params[:status].nil?) && 
 						(params[:size].to_s == "Small" || params[:size].to_s == "Medium" || params[:size].to_s == "Large"))
 						@tasks = @person.tasks.create!(
 		    			status: params[:status],
@@ -49,7 +49,7 @@ class Api::TasksController < ApplicationController
 						render json: { error: 'One of required fields is missing/incorrect data(IF)'}, status: 400
 					end
 				else
-					if (!params[:course].nil? && !params[:details].nil? && (params[:status].to_s == "Active" || params[:status].to_s == "Done" || params[:status].to_s == "active" || params[:status].to_s == "done") && 
+					if ((!params[:status].nil? || params[:status].to_s == "Active" || params[:status].to_s == "Done" || params[:status].to_s == "active" || params[:status].to_s == "done") && 
 						!params[:dueDate].nil?)
 						@tasks = @person.tasks.create!(
 			    			status: params[:status],
@@ -81,7 +81,7 @@ class Api::TasksController < ApplicationController
 		    status: params[:status],
 		    description: params[:description]
 		)
-        render json: @tasks
+        render json:  (format_collection @task), status: 200
 
     end 
 
@@ -92,7 +92,7 @@ class Api::TasksController < ApplicationController
 	    render json: @tasks
     end
 
-    def get_task_by_id
+   def get_task_by_id
 		begin
 			@task = Task.find(params[:id])
 		rescue Exception => e 
@@ -110,31 +110,33 @@ class Api::TasksController < ApplicationController
 			render json: { error: 'A task with the id ' + params[:id] + ' does not exist(set_task).'}, status: 404
 		else
 			@task = Task.find(params[:id])
-				if (!params[:type].nil?)
-					@upd = @task.update(type: params[:type])
-				end
-				if (params[:status].to_s == "Active" || params[:status].to_s == "active")
-					@tasks=@tasks.update(status: "active")
-				end
-				if (params[:status].to_s == "Done" || params[:status].to_s == "done")
-					@tasks=@tasks.update(status: "done")
-				end
-				if (!params[:description].nil?)
-					@upd = @task.update(description: params[:description])
-				end
-				if (!params[:size].nil?)
-					@upd = @task.update(size: params[:size])
-				end
-				if (!params[:course].nil?)
-					@upd = @task.update(course: params[:course])
-				end
-				if (!params[:dueDate].nil?)
-					@upd = @task.update(dueDate: params[:dueDate])
-				end
-				if (!params[:details].nil?)
-					@upd = @task.update(details: params[:details])
-				end
-			render json: @task , status: 200
+			if (@task.type.to_s == "Chore" && params[:type].to_s =="HomeWork")
+				# disable all the fields
+				@task=@task.update (type: params[:type],
+					status: "active",
+					description: nil,
+					size: nil,
+					course:params[:course],
+					dueDate:params[:dueDate],
+					details:params[:details])
+			end
+			if (@task.type.to_s == "HomeWork" && params[:type].to_s =="Chore")
+				# disable all the fields
+				@task=@task.update (type: params[:type],
+					status: "active",
+					description: params[:description],
+					size: params[:size],
+					course:nil,
+					dueDate:nil,
+					details:nil,)
+			end
+			if (params[:status].to_s == "Active" || params[:status].to_s == "active")
+				@tasks=@tasks.update(status: "active")
+			end
+			if (params[:status].to_s == "Done" || params[:status].to_s == "done")
+				@tasks=@tasks.update(status: "done")
+			end
+			render json: (format_collection @task), status: 200
 		end
 	end
 
