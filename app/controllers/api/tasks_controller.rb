@@ -157,7 +157,7 @@ class Api::TasksController < ApplicationController
 			render json: { error: 'A task with the id ' + params[:id] + ' does not exist.'}, status: 404
 		else
 			@task = Task.find(params[:id])
-			render json: @task.person_id, status: 200
+			render json: @task.owner_id, status: 200
 		end
 	end
 
@@ -170,7 +170,7 @@ class Api::TasksController < ApplicationController
 			post_data = request.body.read
 			req = JSON.parse(post_data)
 			@task.update(
-				person_id: req
+				owner_id: req
 			)
 			render json: {message: 'task owner updated successfully.'}, status: 204
 		end

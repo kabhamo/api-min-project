@@ -63,13 +63,20 @@ class Api::PeopleController < ApplicationController
     end 
 
     def destroy
-    	begin
+		#@people = Person.all 
+		begin
 			@people = Person.find(params[:id])
 		rescue Exception => e 
-			render json: { error: 'A person with the id ' + params[:id] + ' does not exist.'}, status: 404
+			render json: {error: 'A person with id ' + params[:id] + ' does not exist.'}, status: 404
 		else
+			@tasks = @people.tasks.all
+			if @tasks.size > 0
+				@tasks.each do |i|
+					@tasks.destroy(i.id)
+				end
+			end
 			@people.destroy
-	    	render json: { message: 'Person removed successfully'}, status: 200
+			render json: {message: "Person removed successfully." }, status: 200
 		end
-    end 
+	end
 end
