@@ -1,24 +1,56 @@
-# README
+# Rails Rest API
+Mhamed-Efi
+[![Build Status](https://travis-ci.org/YuKitAs/rails-rest-api.svg?branch=master)](https://travis-ci.org/YuKitAs/rails-rest-api)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Project Setup
 
-Things you may want to cover:
+**Install all gems**:
 
-* Ruby version
+```console
+$ bundle install
+```
 
-* System dependencies
+**Update the database with new data model**:
 
-* Configuration
+```console
+$ rake db:migrate
+```
 
-* Database creation
+**Feed the database with default seeds**:
 
-* Database initialization
+```console
+$ rake db:seed
+```
 
-* How to run the test suite
+**Start the web server on `http://localhost:3000` by default**:
 
-* Services (job queues, cache servers, search engines, etc.)
+```console
+$ rails server
+```
 
-* Deployment instructions
+## PEOPLE ROUTES
 
-* ...
+| HTTP verbs | Paths  | Used for |
+| ---------- | ------ | --------:|
+| GET | api/people/| |
+| GET | api/people/:person_id   | |
+| GET | api/people/:person_id/tasks    | |
+| POST | api/people/ |  |
+| POST | api/people/:person_id/tasks |  |
+| DELETE | api/people/:person_id |  |
+| PATCH | api/people/:person_id |  |
+
+
+## TASKS ROUTES
+
+| HTTP verbs | Paths  | Used for |
+| ---------- | ------ | --------:|
+| GET | api/tasks/:id | |
+| GET | api/tasks/:id/status | |
+| GET | api/tasks/:id/owner | |
+| PATCH | api/tasks/:id |  |
+| PUT | api/tasks/:id/status |  |
+| PUT | api/tasks/:id/owner |  |
+| DELETE | api/tasks/:id |  |
+
+## Use Case Examples
