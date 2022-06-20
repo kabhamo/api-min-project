@@ -13,7 +13,7 @@ class Api::PeopleController < ApplicationController
 			 @people = Person.find(params[:id])
 	    		render json: @people, status: 200
    		end 
-	    # @people = Person.find(params[:id])csdfsdfsd
+	    # @people = Person.find(params[:id])
 	    # render json: @people
     end 
 
