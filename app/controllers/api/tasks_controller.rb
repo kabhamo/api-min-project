@@ -89,7 +89,7 @@ class Api::TasksController < ApplicationController
 	    @tasks = Task.all 
 	    @tasks = Task.find(params[:id])
 	    @tasks.destroy
-	    render json: @tasks
+	    render json: (format_collection @tasks), status: 200
     end
 
    def get_task_by_id
@@ -129,7 +129,7 @@ class Api::TasksController < ApplicationController
 					@upd = @task.update(description: params[:description])
 					@upd = @task.update(details: params[:details])
 				end
-			render json: @task , status: 200
+			render json: @task.attributes.delete_if { |k, v| v.nil? }.to_json , status: 200
 		end
 	end
 
