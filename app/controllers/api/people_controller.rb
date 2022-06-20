@@ -13,7 +13,7 @@ class Api::PeopleController < ApplicationController
 			 @people = Person.find(params[:id])
 	    		render json: @people, status: 200
    		end 
-	    # @people = Person.find(params[:id])
+	    # @people = Person.find(params[:id])csdfsdfsd
 	    # render json: @people
     end 
 
@@ -43,7 +43,7 @@ class Api::PeopleController < ApplicationController
 		else
 			 @people = Person.find(params[:id])
 			 @unique = Person.where(email: (params[:email]))
-			if (!params[:email].nil? && @unique!=[])
+			if (!params[:email].nil? && @unique==[])
 	        	@people.update(
 		    	email: params[:email]
         		)
