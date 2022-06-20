@@ -103,42 +103,35 @@ class Api::TasksController < ApplicationController
 			end
 	end
 
-	#def set_task_by_id
-	#	begin
-	#		@task = Task.find(params[:id])
-	#	rescue Exception => e 
-	#		render json: { error: 'A task with the id ' + params[:id] + ' does not exist(set_task).'}, status: 404
-	#	else
-	#		@task = Task.find(params[:id])
-	#		if (@task.type.to_s == "Chore" && params[:type].to_s =="HomeWork")
-	#			# disable all the fields
-	#			@task=@task.update (type: params[:type],
-	#				status: "active",
-	#				description: nil,
-	#				size: nil,
-	#				course:params[:course],
-	#				dueDate:params[:dueDate],
-	#				details:params[:details])
-	#		end
-	#		if (@task.type.to_s == "HomeWork" && params[:type].to_s =="Chore")
-	#			# disable all the fields
-	#			@task=@task.update (type: params[:type],
-	#				status: "active",
-	#				description: params[:description],
-	#				size: params[:size],
-	#				course:nil,
-	#				dueDate:nil,
-	#				details:nil,)
-	#		end
-	#		if (params[:status].to_s == "Active" || params[:status].to_s == "active")
-	#			@tasks=@tasks.update(status: "active")
-	#		end
-	#		if (params[:status].to_s == "Done" || params[:status].to_s == "done")
-	#			@tasks=@tasks.update(status: "done")
-	#		end
-	#		render json: (format_collection @task), status: 200
-	#	end
-	#end
+	def set_task_by_id
+		begin
+			@task = Task.find(params[:id])
+			#@fkey = get_owner_id(params[:id])
+			#@fkey=(Task.reflections['owner'].foreign_key)
+			print '*****'
+			print @fkey
+		rescue Exception => e 
+			render json: { error: 'A task with the id ' + params[:id] + ' does not exist(set_task).'}, status: 404
+		else
+			@task = Task.find(params[:id])
+				if (!params[:type].nil? && (params[:type].to_s == "Chore" || params[:type].to_s == "HomeWork"))
+					# @upd = @task.update(type: params[:type])
+					if (params[:status].nil? ||params[:status].to_s == "Active" || params[:status].to_s == "active")
+						@upd=@task.update(status: "active")
+					end
+					if (params[:status].to_s == "Done" || params[:status].to_s == "done")
+						@upd=@task.update(status: "done")
+					end
+					@upd = @task.update(description: params[:description])
+					@upd = @task.update(size: params[:size])
+					@upd = @task.update(course: params[:course])
+					@upd = @task.update(dueDate: params[:dueDate])
+					@upd = @task.update(description: params[:description])
+					@upd = @task.update(details: params[:details])
+				end
+			render json: @task , status: 200
+		end
+	end
 
 	def del_task_by_id
 		begin
