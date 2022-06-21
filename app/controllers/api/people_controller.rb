@@ -63,7 +63,6 @@ class Api::PeopleController < ApplicationController
     end 
 
     def destroy
-		#@people = Person.all 
 		begin
 			@people = Person.find(params[:id])
 		rescue Exception => e 

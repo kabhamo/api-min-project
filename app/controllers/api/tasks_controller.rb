@@ -4,19 +4,19 @@ class Api::TasksController < ApplicationController
 	#TODO: type field return,create/update-fields can be nulls
 	# render status correctly,rename methods and fields(addTask,etc...)
 	def index
-		begin
-			@people = Person.find(params[:person_id])
-		rescue Exception => e 
-			render json: { error: 'A person with given id ' + params[:person_id] + ' does not exist.'}, status: 404
-		else
-			@people = Person.find(params[:person_id])
-		   	@tasks = @person.tasks
-		   	if ((params[:status]).nil?)
-		   		render json: (format_collection @tasks), status: 200
-	   		else
-       			@ret = @tasks.where(status:(params[:status]))
-	   			render json: (format_collection @ret), status: 200
-   			end
+			begin
+				@people = Person.find(params[:person_id])
+			rescue Exception => e 
+				render json: { error: 'A person with given id ' + params[:person_id] + ' does not exist.'}, status: 404
+			else
+				@people = Person.find(params[:person_id])
+				@tasks = @person.tasks
+				if ((params[:status]).nil?)
+					render json: (format_collection @tasks), status: 200
+				else
+					@ret = @tasks.where(status:(params[:status]))
+					render json: (format_collection @ret), status: 200
+				end
 		end
     end 
 
@@ -29,7 +29,7 @@ class Api::TasksController < ApplicationController
 			if (params[:type].to_s == "Chore" || params[:type].to_s =="HomeWork")
 				if (params[:type].to_s == "Chore")
 					if ((params[:status].to_s == "Active" || params[:status].to_s == "Done" ||params[:status].to_s == "active" || params[:status].to_s == "done" || params[:status].nil?) && 
-						(params[:size].to_s == "Small" || params[:size].to_s == "Medium" || params[:size].to_s == "Large"))
+						(params[:size].to_s == "Small" || params[:size].to_s == "Medium" || params[:size].to_s == "Large") && !params[:description].nil?)
 						@tasks = @person.tasks.create!(
 		    			status: params[:status],
 		    			description: params[:description],
@@ -37,20 +37,22 @@ class Api::TasksController < ApplicationController
 					)
 						if (params[:status].nil?)
 							@tasks=@tasks.update(status: "active")
+							@person.increment!(:activeTaskCount)
 						end
 						if (params[:status].to_s == "Active")
 							@tasks=@tasks.update(status: "active")
+							@person.increment!(:activeTaskCount)
 						end
 						if (params[:status].to_s == "Done")
 							@tasks=@tasks.update(status: "done")
 						end
 					render json:{ message: 'Task created and assigned successfully'}, status: 201
 					else
-						render json: { error: 'One of required fields is missing/incorrect data(IF)'}, status: 400
+						render json: { error: 'One of required fields is missing/incorrect data'}, status: 400
 					end
 				else
-					if ((!params[:status].nil? || params[:status].to_s == "Active" || params[:status].to_s == "Done" || params[:status].to_s == "active" || params[:status].to_s == "done") && 
-						!params[:dueDate].nil?)
+					if ((params[:status].nil? || params[:status].to_s == "Active" || params[:status].to_s == "Done" || params[:status].to_s == "active" || params[:status].to_s == "done") && 
+						!params[:dueDate].nil? && !params[:course].nil? && !params[:details].nil?)
 						@tasks = @person.tasks.create!(
 			    			status: params[:status],
 			    			course: params[:course],
@@ -59,9 +61,11 @@ class Api::TasksController < ApplicationController
 					)
 					if (params[:status].nil?)
 							@tasks=@tasks.update(status: "active")
+							@person.increment!(:activeTaskCount)
 						end
 						if (params[:status].to_s == "Active")
 							@tasks=@tasks.update(status: "active")
+							@person.increment!(:activeTaskCount)
 						end
 						if (params[:status].to_s == "Done")
 							@tasks=@tasks.update(status: "done")
@@ -92,7 +96,7 @@ class Api::TasksController < ApplicationController
 	    render json: (format_collection @tasks), status: 200
     end
 
-   def get_task_by_id
+   	def get_task_by_id
 		begin
 			@task = Task.find(params[:id])
 		rescue Exception => e 
@@ -106,17 +110,17 @@ class Api::TasksController < ApplicationController
 	def set_task_by_id
 		begin
 			@task = Task.find(params[:id])
-			#@fkey = get_owner_id(params[:id])
-			#@fkey=(Task.reflections['owner'].foreign_key)
-			print '*****'
-			print @fkey
 		rescue Exception => e 
-			render json: { error: 'A task with the id ' + params[:id] + ' does not exist(set_task).'}, status: 404
+			render json: { error: 'A task with the id ' + params[:id] + ' does not exist.'}, status: 404
 		else
 			@task = Task.find(params[:id])
 				if (!params[:type].nil? && (params[:type].to_s == "Chore" || params[:type].to_s == "HomeWork"))
-					# @upd = @task.update(type: params[:type])
 					if (params[:status].nil? ||params[:status].to_s == "Active" || params[:status].to_s == "active")
+						if(@task.type.to_s=="done" || @task.type.to_s=="Done")
+							# @updperson=Person.find(:@task.owner_id)
+							@updperson=Person.find_by(id: @task.owner_id)
+							@updperson.increment!(:activeTaskCount)
+						end
 						@upd=@task.update(status: "active")
 					end
 					if (params[:status].to_s == "Done" || params[:status].to_s == "done")
@@ -164,10 +168,16 @@ class Api::TasksController < ApplicationController
 		else
 			post_data = request.body.read
 			req = JSON.parse(post_data)
-			@task.update(
-				owner_id: req
-			)
-			render json: {message: 'task owner updated successfully.'}, status: 204
+			begin
+				@new_owner = Person.find_by(id: req)
+			rescue Exception => e
+				render json: { error: 'A person with the id ' + req + ' does not exist.'}, status: 404
+			else
+					@task.update(
+					owner_id: req
+				)
+				render json: {message: 'task owner updated successfully.'}, status: 204
+			end
 		end
 	end
 
@@ -190,8 +200,14 @@ class Api::TasksController < ApplicationController
 		else 
 			post_data = request.body.read
     		req = JSON.parse(post_data)
-			if (req == "Active" || req == "Done")
+			if (req == "Active" || req == "Done" || req == "active" || req == "done")
 				begin
+					if( req== "Ative")
+						req="active"
+					end
+					if( req== "Done")
+						req="done"
+					end
 					@task = @task.update(status: req)
 				rescue Exception => e 
 					render json: { error: 'An error occurred when update the task'}, status: 400
