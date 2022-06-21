@@ -13,6 +13,11 @@ $ bundle install
 **Update the database with new data model**:
 
 ```console
+$ rails db:drop:_unsafe
+```
+
+
+```console
 $ rake db:migrate
 ```
 
