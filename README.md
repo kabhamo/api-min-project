@@ -10,7 +10,7 @@ Mhamed-Efi
 $ bundle install
 ```
 
-**Update the database with new data model**:
+**(Important!)Update the database with new data model**:
 
 ```console
 $ rails db:drop:_unsafe
